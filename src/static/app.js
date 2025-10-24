@@ -4,6 +4,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
 
+  // small helper to escape HTML in participant strings
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   // Function to fetch activities from API
   async function fetchActivities() {
     try {
@@ -18,13 +28,28 @@ document.addEventListener("DOMContentLoaded", () => {
         const activityCard = document.createElement("div");
         activityCard.className = "activity-card";
 
-        const spotsLeft = details.max_participants - details.participants.length;
+        const participants = Array.isArray(details.participants) ? details.participants : [];
+        const spotsLeft = details.max_participants - participants.length;
+
+        // Build participants HTML
+        const participantsHtml = participants.length
+          ? `<div class="participants">
+               <h5>Participants</h5>
+               <ul class="participant-list">
+                 ${participants.map(p => `<li><span class="participant-badge">${escapeHtml(p)}</span></li>`).join("")}
+               </ul>
+             </div>`
+          : `<div class="participants">
+               <h5>Participants</h5>
+               <p class="info">No participants yet.</p>
+             </div>`;
 
         activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
+          <h4>${escapeHtml(name)}</h4>
+          <p>${escapeHtml(details.description)}</p>
+          <p><strong>Schedule:</strong> ${escapeHtml(details.schedule)}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          ${participantsHtml}
         `;
 
         activitiesList.appendChild(activityCard);
